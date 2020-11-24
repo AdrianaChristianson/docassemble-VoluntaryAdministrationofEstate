@@ -139,10 +139,14 @@ fields:
       variable: x[i].person_type
       is: business
 ---
-#pulled in and edited from BQ
-id: your address
+#pulled in and edited from BQ and civil Action Coversheet
+id: petitioner address
 question: |
+ % if is_representing_petitioner:
+  What is your client's address?
+  % else:
   What is your address?
+  % endif
 fields:
   - Street address: users[0].address.address
     address autocomplete: True
@@ -172,50 +176,71 @@ fields:
   - Phone number: users[0].phone_number
     required: true 
 ---
-#pulled in and edited from BQ
-
-id: name of person
+#pulled in and edited from Civil Action Coversheet
+id: representation
+question: |
+  Representation
+fields:
+  - Are you an attorney representing a petitioner?: is_representing_petitioner
+    datatype: yesnoradio
+  - 'Attorney BBO Number': attorney_bbo_number
+    show if:
+      variable: is_representing_petitioner
+      is: True
+---
+#pulled in and edited from Civil Action Coversheet
+id: petitioner name
+question:  |
+  % if is_representing_petitioner:
+  What is your client's name?
+  % else:
+  What is your name?
+  % endif
+fields:
+  - First Name: users[0].name.first
+  - Middle Name: users[0].name.middle
+    required: False
+  - Last Name: users[0].name.last
+  - Suffix: users[0].name.suffix
+    code: |
+      name_suffix()
+    required: False  
+---
+#pulled in and edited from Civil Action Coversheet
+id: attorney name
+question: |
+  What is your name?
+fields:
+  - First name: attorney.name.first
+  - Middle name: attorney.name.middle
+    required: False
+  - Last name: attorney.name.last
+  - Suffix: attorney.name.suffix
+    code: |
+      name_suffix()
+    required: False
+---
+#pulled in and edited from Civil Action Coversheet
+id: attorney address
 generic object: Individual
 question: |
-  Please fill in the following information
+  What is your address?
 fields:
-  - "Did an attorney assist with the completion of this interview?": attorney_help
-    datatype: yesnoradio
-  - First Name: attorney.name.first
-    show if: attorney_help
-  - Middle Name: attorney.name.middle
-    show if: attorney_help
-    required: False
-  - Last Name: attorney.name.last
-    show if: attorney_help
-  - Suffix: attorney.name.suffix
-    show if: attorney_help
-    required: False
-  - Address: attorney.address.address
-    show if: attorney_help
-  - Apt, Unit, No, etc.: attorney.address.unit
-    show if: attorney_help
+  - Street address: attorney.address.address
+    address autocomplete: True
+  - Unit: attorney.address.unit
     required: False
   - City: attorney.address.city
-    show if: attorney_help
-    required: False    
   - State: attorney.address.state
-    show if: attorney_help
-    required: False
+    default: MA   
+    code: |
+      states_list()   
   - Zip: attorney.address.zip
-    show if: attorney_help
-    required: False    
-  - Primary Phone: attorney.phone_number
-    show if: attorney_help
-    required: False    
-  - B.B.O. Number: attorney_bbo_number
-    show if: attorney_help
     required: False
-  - email: attorney.email
-    show if: attorney_help
+  - Email Address: attorney.email  
     required: False
-
-
+  - Primary Phone Number: attorney.phone_number
+    required: False
 ---
 id: interview_order_Voluntary_Administration_of_Estate
 code: |
@@ -226,9 +251,11 @@ code: |
   # Set the allowed courts for this interview
   allowed_courts = interview_metadata["Voluntary_Administration_of_Estate"]["allowed courts"]
   nav.set_section('review_Voluntary_Administration_of_Estate')
+  if is_representing_petitioner:
+    attorney.name.first
+    attorney.address.address
   users[0].name.first
   users[0].address.address
-  users[0].phone_number
   decedent.name.first
   user_role = 'plaintiff'
   decedent_death_date
@@ -239,12 +266,9 @@ code: |
   interested_parties[0].address.block()
   courts[0].address.county
   str(users[0])
-  users[0].address.address
-  users[0].address.address
   str(interested_parties[0])
   certified_mail_copy_sent
   signature_date
-  attorney_help
   Voluntary_Administration_of_Estate_preview_question # Pre-canned preview screen
   basic_questions_signature_flow
   users[0].signature
@@ -402,11 +426,11 @@ attachment:
       - "decedent_address_zip": ${ decedent.address.zip }
       - "petitioner_name_first": ${ users[0].name.first }
       - "petitioner_name_last": ${ users[0].name.last }
-      - "petitioner_address_street": ${ users[0].mailing_addresses.address }
-      - "petitioner_address_street2": ${ users[0].mailing_addresses.unit }
-      - "petitioner_address_city": ${ users[0].mailing_addresses.city }
-      - "petitioner_address_state": ${ users[0].mailing_addresses.state }
-      - "petitioner_address_zip": ${ users[0].mailing_addresses.zip }
+      - "petitioner_address_street": ${ users[0].address.address }
+      - "petitioner_address_street2": ${ users[0].address.unit }
+      - "petitioner_address_city": ${ users[0].address.city }
+      - "petitioner_address_state": ${ users[0].address.state }
+      - "petitioner_address_zip": ${ users[0].address.zip }
       - "petitioner_phone": ${ users[0].phone_number }
       - "decedent_name_first__3": ${ decedent.name.first }
       - "decedent_name_middle__3": ${ decedent.name.middle }
