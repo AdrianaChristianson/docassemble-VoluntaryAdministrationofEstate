@@ -1,0 +1,784 @@
+comment: |
+  The metadata section controls the tab title and saved interview title. You can delete this section if you include this YAML file in another YAML file.
+metadata:
+  title: |
+    Voluntary Administration of Estate
+  short title: |
+    Voluntary Administration of Estate
+---
+comment: |
+  This section is used by MAVirtualCourts to control how some of the questions work.
+mandatory: True
+code: |
+  interview_metadata # make sure we initialize the object
+  if not defined("interview_metadata['Voluntary_Administration_of_Estate']"):
+    interview_metadata.initializeObject('Voluntary_Administration_of_Estate')
+  interview_metadata['Voluntary_Administration_of_Estate'].update({
+    'title': 'Voluntary Administration of Estate',
+    'short title': 'Voluntary Administration of Estate',
+    'description': 'Description',
+    'original_form': 'https://www.mass.gov/guides/file-a-voluntary-administration-for-an-estate',
+    'allowed courts': [
+      'Probate and Family Court',
+    ],
+    'categories': [
+      'Other',
+      'Probate',
+    ],
+    'logic block variable': 'Voluntary_Administration_of_Estate',
+    'attachment block variable': 'Voluntary_Administration_of_Estate_attachment',
+    'typical role': 'plaintiff',
+  })
+---
+include:
+  - docassemble.MAVirtualCourt:basic-questions.yml
+---
+features:
+  navigation: True
+---
+sections:
+  - review_Voluntary_Administration_of_Estate: Review your answers
+---
+objects:
+  - decedent: Individual
+  - interested_parties: PeopleList
+  - attorney: Individual
+---
+#pulled in and edited from BQ
+id: "decedent's address"
+question: |
+  What was ${ decedent }'s last address?
+fields:
+  - Street address: decedent.address.address
+    address autocomplete: True
+  - Unit/Apt.: decedent.address.unit
+    required: False
+  - City: decedent.address.city
+  - State: decedent.address.state
+    default: MA   
+    code: |
+      states_list()   
+  - Zip: decedent.address.zip
+    required: False
+---
+#pulled in and edited from BQ ALLOWS ME TO GET AN ADDRESS FOR INTERESTED PARTY
+id: names of people
+generic object: PeopleList
+question: |
+  Please list all ${x.object_name()} below
+subquestion: |
+  Click "${word("Add another")}" to add more.
+list collect: True
+fields:
+  - Is this ${noun_singular(x.object_name())} a person or business?: x[i].person_type
+    input type: radio
+    choices:
+      - Business or organization: business
+      - Person: individual
+  - First name: x[i].name.first
+    show if:
+      variable: x[i].person_type
+      is: "individual"
+  - Last name: x[i].name.last
+    show if:
+      variable: x[i].person_type      
+      is: "individual"
+  - Suffix: x[i].name.suffix
+    code: |
+      name_suffix()
+    show if:
+      variable: x[i].person_type      
+      is: "individual"
+    required: False
+  - Address: x[i].address.address
+    show if:
+      variable: x[i].person_type      
+      is: "individual"
+  - Unit: x[i].address.unit
+    show if:
+      variable: x[i].person_type      
+      is: "individual"
+      required: False
+  - City: x[i].address.city
+    show if:
+      variable: x[i].person_type      
+      is: "individual"
+  - State: x[i].address.state
+    show if:
+      variable: x[i].person_type      
+      is: "individual"
+  - ZIP: x[i].address.zip
+    show if:
+      variable: x[i].person_type      
+      is: "individual"
+      required: False
+  - note: "What is this party's interest? You may select more than one choice."
+    show if:
+      variable: x[i].person_type      
+      is: "individual"
+  - Heir: x[i].heir
+    show if:
+      variable: x[i].person_type      
+      is: "individual"
+    datatype: yesno
+    help: Def of heir
+  - Divisee: x[i].divisee
+    show if:
+      variable: x[i].person_type      
+      is: "individual"
+    datatype: yesno
+    help: Def of divisee
+  - Joint Owner: x[i].jointowner
+    show if:
+      variable: x[i].person_type      
+      is: "individual"
+    datatype: yesno
+    help: Def of JO  
+  - Name of business or organization: x[i].name.first
+    show if:
+      variable: x[i].person_type
+      is: business
+---
+#pulled in and edited from BQ
+id: your address
+question: |
+  What is your address?
+fields:
+  - Street address: users[0].address.address
+    address autocomplete: True
+  - Unit: users[0].address.unit
+    required: False
+  - City: users[0].address.city
+  - State: users[0].address.state
+    code: |
+      states_list()
+    default: MA      
+  - Zip: users[0].address.zip
+    required: False
+#  HERE, ASK IF THIS IS SAME AS MAILING, IF NOT, SHOW MAILING ADDRESS ENTRY FIELDS
+#  - Mailing address is same:
+  
+  
+#  - Mailing street address: x[i].name.first
+#    show if:
+#      variable: x[i].person_type
+#      is: false
+---
+id: your contact information
+question: |
+  What is your primary phone number?
+
+fields:  
+  - Phone number: users[0].phone_number
+    required: true 
+---
+#pulled in and edited from BQ
+
+id: name of person
+generic object: Individual
+question: |
+  Please fill in the following information
+fields:
+  - "Did an attorney assist with the completion of this interview?": attorney_help
+    datatype: yesnoradio
+  - First Name: attorney.name.first
+    show if: attorney_help
+  - Middle Name: attorney.name.middle
+    show if: attorney_help
+    required: False
+  - Last Name: attorney.name.last
+    show if: attorney_help
+  - Suffix: attorney.name.suffix
+    show if: attorney_help
+    required: False
+  - Address: attorney.address.address
+    show if: attorney_help
+  - Apt, Unit, No, etc.: attorney.address.unit
+    show if: attorney_help
+    required: False
+  - City: attorney.address.city
+    show if: attorney_help
+    required: False    
+  - State: attorney.address.state
+    show if: attorney_help
+    required: False
+  - Zip: attorney.address.zip
+    show if: attorney_help
+    required: False    
+  - Primary Phone: attorney.phone_number
+    show if: attorney_help
+    required: False    
+  - B.B.O. Number: attorney_bbo_number
+    show if: attorney_help
+    required: False
+  - email: attorney.email
+    show if: attorney_help
+    required: False
+
+
+---
+id: interview_order_Voluntary_Administration_of_Estate
+code: |
+  # This is a placeholder to control logic flow in this interview
+
+  basic_questions_intro_screen 
+  Voluntary_Administration_of_Estate_intro
+  # Set the allowed courts for this interview
+  allowed_courts = interview_metadata["Voluntary_Administration_of_Estate"]["allowed courts"]
+  nav.set_section('review_Voluntary_Administration_of_Estate')
+  users[0].name.first
+  users[0].address.address
+  users[0].phone_number
+  decedent.name.first
+  user_role = 'plaintiff'
+  decedent_death_date
+  decedent.address.address
+  petitioner_relationship
+  decedent_has_will_no
+  asset_car
+  interested_parties[0].address.block()
+  courts[0].address.county
+  str(users[0])
+  users[0].address.address
+  users[0].address.address
+  str(interested_parties[0])
+  certified_mail_copy_sent
+  signature_date
+  attorney_help
+  Voluntary_Administration_of_Estate_preview_question # Pre-canned preview screen
+  basic_questions_signature_flow
+  users[0].signature
+  attorney.signature
+  Voluntary_Administration_of_Estate = True
+---
+comment: |
+  This question is used to introduce your interview. Please customize
+id: Voluntary Administration of Estate
+continue button field: Voluntary_Administration_of_Estate_intro
+question: |
+  Voluntary Administration of Estate
+subquestion: |
+  This form allows a user to go through a simplified probate procedure for an estate with minimal assets and no real estate. It may be used by a petitioner in the event that a decedent passes away leaving personal property (no real property) valued at $25,000 or less not counting one motor vehicle.  Once the form is completed, it will be submitted the Probate Court representing the county in which the decedent resided at the time of death.
+---
+id: Placeholder preview screen
+continue button field: Voluntary_Administration_of_Estate_preview_question
+question: |
+  Placeholder preview screen
+subquestion: |
+  Here is a preview of the form you'll sign on the next page. 
+  
+   ${Voluntary_Administration_of_Estate_attachment['preview']}
+---
+id: "What is the decedent's date of death?"
+question: |
+  When did ${ decedent.name.first } die?
+subquestion: |
+  This information is available on the death certificate.
+fields:
+  - "Date of ${ decedent.name.first }'s death": decedent_death_date
+    datatype: date
+---
+id: Do you have a separate mailing address?
+question: |
+  Do you have a separate mailing address?
+subquestion: |
+  Placeholder text
+fields:
+  - no label: separate_mailing_address
+    datatype: yesnoradio
+  - 'Street': users[0].mailing_addresses.address
+    show if: separate_mailing_address
+  - 'Unit': users[0].mailing_addresses.unit
+    required: False
+    show if: separate_mailing_address
+  - 'City/Town': users[0].mailing_addresses.city
+    show if: separate_mailing_address
+  - 'State': users[0].mailing_addresses.state
+    show if: separate_mailing_address
+    code: |
+      states_list()
+    default: "MA"   
+  - 'ZIP': users[0].mailing_addresses.zip
+    show if: separate_mailing_address
+---
+id: What is your relationship to the decedent?
+question: |
+  What is your relationship to ${ decedent.name.first }?
+subquestion: |
+  Are you a Personal Representative named in will, surviving spouse, heir, devisee, etc.
+fields:
+  - 'Relationship': petitioner_relationship
+---
+id: Does the decedent have a will?
+question: |
+  Did ${ decedent.name.first } have a will?
+subquestion: |
+  Select "Yes" if the original will and codicil(s) are in the possession of the court or accompany this statement, and you are unaware of any instrument revoking the will and believe it to be ${ decedent.name.first }'s last will. Select "No" if you are unaware of any unrevoked will relating to property in Massachusetts.  
+fields:
+  - : decedent_has_will_no
+    datatype: yesnoradio
+ 
+---
+id: Have you sent a copy of this form to the Division of Medical Assistance
+question: |
+  Have you sent a copy of this form to the Division of Medical Assistance
+subquestion: |
+  NOTE: How does someone fill this out during form completion?
+yesno: certified_mail_copy_sent
+---
+id: Please list the decedents assets and the total value of all assets.
+question: |
+  Please list the decedent's assets and the total value of all assets.
+subquestion: |
+  Asset total must not exclude $25,000, and one motor vehicle may be excluded from this total.  
+fields:
+  - 'Motor vehicle make, model, and VIN': asset_car
+    required: False
+  - 'Asset 1 description': asset_1
+  - 'Asset 1 value': asset_1_value
+  - 'Asset 2 description': asset_2
+    required: False
+  - 'Asset 2 value': asset_2_value
+    required: False
+  - 'Asset 3 description': asset_3
+    required: False
+  - 'Asset 3 value': asset_3_value
+    required: False
+  - 'Asset 4 description': asset_4
+    required: False
+  - 'Asset 4 value': asset_4_value
+    required: False
+  - 'Asset total value': asset_value_total
+---
+id: What is the BBO number?
+question: |
+  What is ${ attorney.name.first }'s BBO number?
+subquestion: |
+  Placeholder text
+fields:
+  - 'Attorney BBO number': attorney_bbo_number
+---
+progress: 100
+mandatory: True
+id: Placeholder download screen
+question: |
+  Placeholder download screen
+subquestion: |
+  Placeholder
+  
+  ### Next steps
+  
+  1. Step 1
+  1. Step 2
+  
+  Below is a preview of your form.
+  
+  ${Voluntary_Administration_of_Estate_attachment['final'] }
+need: Voluntary_Administration_of_Estate
+attachment code: Voluntary_Administration_of_Estate_attachment['final']
+---
+objects:
+  - Voluntary_Administration_of_Estate_attachment: DADict
+---
+attachment:
+    variable name: Voluntary_Administration_of_Estate_attachment[i]
+    name: Voluntary Administration of Estate
+    filename: Voluntary_Administration_of_Estate
+    skip undefined: True
+    pdf template file: Voluntary_Administration_of_Estate_Draftv2.pdf
+    fields: 
+      - "court_county": ${ courts[0].address.county }
+      - "decedent_name_first": ${ decedent.name.first }
+      - "decedent_name_middle": ${ decedent.name.middle }
+      - "decedent_name_last": ${ decedent.name.last }
+      - "decedent_name_first__2": ${ decedent.name.first }
+      - "decedent_name_middle__2": ${ decedent.name.middle }
+      - "decedent_name_last__2": ${ decedent.name.last }
+      - "decedent_name": ${ str(decedent) }
+      - "decedent_address_street": ${ decedent.address.address }
+      - "decedent_address_street2": ${ decedent.address.unit }
+      - "decedent_address_city": ${ decedent.address.city }
+      - "decedent_address_state": ${ decedent.address.state }
+      - "decedent_address_zip": ${ decedent.address.zip }
+      - "petitioner_name_first": ${ users[0].name.first }
+      - "petitioner_name_last": ${ users[0].name.last }
+      - "petitioner_address_street": ${ users[0].mailing_addresses.address }
+      - "petitioner_address_street2": ${ users[0].mailing_addresses.unit }
+      - "petitioner_address_city": ${ users[0].mailing_addresses.city }
+      - "petitioner_address_state": ${ users[0].mailing_addresses.state }
+      - "petitioner_address_zip": ${ users[0].mailing_addresses.zip }
+      - "petitioner_phone": ${ users[0].phone_number }
+      - "decedent_name_first__3": ${ decedent.name.first }
+      - "decedent_name_middle__3": ${ decedent.name.middle }
+      - "decedent_name_last__3": ${ decedent.name.last }
+      - "interested_party1_name": ${ str(interested_parties[0]) }
+      - "interested_party1_address_block": ${ interested_parties[0].address.block() }
+      - "interested_party2_name": ${ str(interested_parties[1]) }
+      - "interested_party2_address_block": ${ interested_parties[1].address.block() }
+      - "interested_party3_name": ${ str(interested_parties[2]) }
+      - "interested_party3_address_block": ${ interested_parties[2].address.block() }
+      - "interested_party4_name": ${ str(interested_parties[3]) }
+      - "interested_party4_address_block": ${ interested_parties[3].address.block() }
+      - "interested_party5_name": ${ str(interested_parties[4]) }
+      - "interested_party5_address_block": ${ interested_parties[4].address.block() }
+      - "interested_party1_heir": ${ interested_parties[0].heir }
+      - "interested_party1_divisee": ${ interested_parties[0].divisee }
+      - "interested_party1_jointowner": ${ interested_parties[0].jointowner }
+      - "interested_party2_heir": ${ interested_parties[1].heir }
+      - "interested_party2_devisee": ${ interested_parties[1].devisee }
+      - "interested_party2_jointowner": ${ interested_parties[1].jointowner }
+      - "interested_party3_heir": ${ interested_parties[2].heir }
+      - "interested_party3_devisee": ${ interested_parties[2].devisee }
+      - "interested_party3_jointowner": ${ interested_parties[2].jointowner }
+      - "interested_party4_heir": ${ interested_parties[3].heir }
+      - "interested_party4_devisee": ${ interested_parties[3].devisee }
+      - "interested_party4_jointowner": ${ interested_parties[3].jointowner }
+      - "interested_party5_heir": ${ interested_parties[4].heir }
+      - "interested_party5_devisee": ${ interested_parties[4].devisee }
+      - "interested_party5_jointowner": ${ interested_parties[4].jointowner }
+      - "decedent_name_first__4": ${ decedent.name.first }
+      - "decedent_name_middle__4": ${ decedent.name.middle }
+      - "decedent_name_last___4": ${ decedent.name.last }
+      - "signature_date": ${ signature_date }
+      # If it is a signature, test which file version we're expecting. leave it empty unless it's the final attachment version
+      - "petitioner_signature": ${ petitioners[0].signature if i == 'final' else '' }
+      # If it is a signature, test which file version we're expecting. leave it empty unless it's the final attachment version
+      - "attorney_signature": ${ attorney.signature if i == 'final' else '' }
+      - "attorney_name": ${ attorney.name }
+      - "attorney_address_street": ${ attorney.address.address }
+      - "attorney_address_street2": ${ attorney.address.unit }
+      - "attorney_address_city": ${ attorney.address.city }
+      - "attorney_address_state": ${ attorney.address.state }
+      - "attorney_address_zip": ${ attorney.address.zip }
+      - "attorney_phone": ${ attorney.phone_number }
+      - "attorney_email": ${ attorney.email }
+      - "decedent_death_date": ${ decedent_death_date }
+      - "petitioner_name_middle_initial": ${ user.middle_initial() }
+      - "petitioner_address_street2_mailing": ${ user_address_street2_mailing }
+      - "petitioner_address_street_mailing": ${ user_address_street_mailing }
+      - "petitioner_address_city_mailing": ${ user_address_city_mailing }
+      - "petitioner_address_state_mailing": ${ user_address_state_mailing }
+      - "petitioner_address_zip_mailing": ${ user_address_zip_mailing }
+      - "petitioner_relationship": ${ user_relationship }
+      - "decedent_has_will_no": ${ decedent_has_will_no }
+      - "decedent_has_will_yes": ${ decedent_has_will_yes }
+      - "certified_mail_copy_sent": ${ certified_mail_copy_sent }
+      - "asset_car": ${ asset_car }
+      - "asset_1": ${ asset_1 }
+      - "asset_1_value": ${ asset_1_value }
+      - "asset_2": ${ asset_2 }
+      - "asset_2_value": ${ asset_2_value }
+      - "asset_3": ${ asset_3 }
+      - "asset_3_value": ${ asset_3_value }
+      - "asset_4": ${ asset_4 }
+      - "asset_4_value": ${ asset_4_value }
+      - "asset_value_total": ${ asset_value_total }
+      - "attorney_bbo_number": ${ attorney_bbo_number }
+---
+id: Voluntary_Administration_of_Estate review screen
+event: review_Voluntary_Administration_of_Estate
+question: |
+  Placeholder Review Screen
+subquestion: |
+  Edit your answers below
+review: 
+  - Edit: decedent_death_date
+    button: |
+      Date of decedent death:
+      ${ decedent_death_date.format() }
+  - Edit: petitioner_address_street2_mailing
+    button: |
+      Petitioner address street2 mailing:
+      ${ petitioner_address_street2_mailing }
+  - Edit: petitioner_address_street_mailing
+    button: |
+      Petitioner address street mailing:
+      ${ petitioner_address_street_mailing }
+  - Edit: petitioner_address_city_mailing
+    button: |
+      Petitioner address city mailing:
+      ${ petitioner_address_city_mailing }
+  - Edit: petitioner_address_state_mailing
+    button: |
+      Petitioner address state mailing:
+      ${ petitioner_address_state_mailing }
+  - Edit: petitioner_address_zip_mailing
+    button: |
+      Petitioner address zip mailing:
+      ${ petitioner_address_zip_mailing }
+  - Edit: petitioner_relationship
+    button: |
+      Petitioner relationship:
+      ${ petitioner_relationship }
+  - Edit: decedent_has_will_no
+    button: |
+      Decedent has will:
+      ${ word(yesno(decedent_has_will_no)) }
+  - Edit: decedent_has_will_yes
+    button: |
+      Decedent has will:
+      ${ word(yesno(decedent_has_will_yes)) }
+  - Edit: certified_mail_copy_sent
+    button: |
+      Certified mail copy sent:
+      ${ word(yesno(certified_mail_copy_sent)) }
+  - Edit: asset_car
+    button: |
+      Motor vehicle make, model, and VIN:
+      ${ asset_car }
+  - Edit: asset_1
+    button: |
+      Asset 1 description:
+      ${ asset_1 }
+  - Edit: asset_1_value
+    button: |
+      Asset 1 value:
+      ${ asset_1_value }
+  - Edit: asset_2
+    button: |
+      Asset 2 description:
+      ${ asset_2 }
+  - Edit: asset_2_value
+    button: |
+      Asset 2 value:
+      ${ asset_2_value }
+  - Edit: asset_3
+    button: |
+      Asset 3 description:
+      ${ asset_3 }
+  - Edit: asset_3_value
+    button: |
+      Asset 3 value:
+      ${ asset_3_value }
+  - Edit: asset_4
+    button: |
+      Asset 4 description:
+      ${ asset_4 }
+  - Edit: asset_4_value
+    button: |
+      Asset 4 value:
+      ${ asset_4_value }
+  - Edit: asset_value_total
+    button: |
+      Asset total value:
+      ${ asset_value_total }
+  - Edit: interested_party1_heir
+    button: |
+      Interested party1 heir:
+      ${ word(yesno(interested_party1_heir)) }
+  - Edit: interested_party1_divisee
+    button: |
+      Interested party1 divisee:
+      ${ word(yesno(interested_party1_divisee)) }
+  - Edit: interested_party1_jointowner
+    button: |
+      Interested party1 jointowner:
+      ${ word(yesno(interested_party1_jointowner)) }
+  - Edit: interested_party2_heir
+    button: |
+      Interested party2 heir:
+      ${ word(yesno(interested_party2_heir)) }
+  - Edit: interested_party2_devisee
+    button: |
+      Interested party2 devisee:
+      ${ word(yesno(interested_party2_devisee)) }
+  - Edit: interested_party2_jointowner
+    button: |
+      Interested party2 jointowner:
+      ${ word(yesno(interested_party2_jointowner)) }
+  - Edit: interested_party3_heir
+    button: |
+      Interested party3 heir:
+      ${ word(yesno(interested_party3_heir)) }
+  - Edit: interested_party3_devisee
+    button: |
+      Interested party3 devisee:
+      ${ word(yesno(interested_party3_devisee)) }
+  - Edit: interested_party3_jointowner
+    button: |
+      Interested party3 jointowner:
+      ${ word(yesno(interested_party3_jointowner)) }
+  - Edit: interested_party4_heir
+    button: |
+      Interested party4 heir:
+      ${ word(yesno(interested_party4_heir)) }
+  - Edit: interested_party4_devisee
+    button: |
+      Interested party4 devisee:
+      ${ word(yesno(interested_party4_devisee)) }
+  - Edit: interested_party4_jointowner
+    button: |
+      Interested party4 jointowner:
+      ${ word(yesno(interested_party4_jointowner)) }
+  - Edit: interested_party5_heir
+    button: |
+      Interested party5 heir:
+      ${ word(yesno(interested_party5_heir)) }
+  - Edit: interested_party5_devisee
+    button: |
+      Interested party5 devisee:
+      ${ word(yesno(interested_party5_devisee)) }
+  - Edit: interested_party5_jointowner
+    button: |
+      Interested party5 jointowner:
+      ${ word(yesno(interested_party5_jointowner)) }
+  - Edit: attorney_bbo_number
+    button: |
+      Attorney BBO number:
+      ${ attorney_bbo_number }
+  - Edit: courts[0].address.county
+    button: |
+      courts[0].address.county:
+      ${ courts[0].address.county }
+  - Edit: decedents[0].name.first
+    button: |
+      decedents[0].name.first:
+      ${ decedents[0].name.first }
+  - Edit: decedents[0].name.middle
+    button: |
+      decedents[0].name.middle:
+      ${ decedents[0].name.middle }
+  - Edit: decedents[0].name.last
+    button: |
+      decedents[0].name.last:
+      ${ decedents[0].name.last }
+  - Edit: decedents[0]
+    button: |
+      decedents[0]:
+      ${ decedents[0] }
+  - Edit: decedents[0].address.address
+    button: |
+      decedents[0].address.address:
+      ${ decedents[0].address.address }
+  - Edit: decedents[0].address.unit
+    button: |
+      decedents[0].address.unit:
+      ${ decedents[0].address.unit }
+  - Edit: decedents[0].address.city
+    button: |
+      decedents[0].address.city:
+      ${ decedents[0].address.city }
+  - Edit: decedents[0].address.state
+    button: |
+      decedents[0].address.state:
+      ${ decedents[0].address.state }
+  - Edit: decedents[0].address.zip
+    button: |
+      decedents[0].address.zip:
+      ${ decedents[0].address.zip }
+  - Edit: petitioners[0].name.first
+    button: |
+      petitioners[0].name.first:
+      ${ petitioners[0].name.first }
+  - Edit: petitioners[0].name.last
+    button: |
+      users[0].name.last:
+      ${ users[0].name.last }
+  - Edit: users[0].address.address
+    button: |
+      users[0].address.address:
+      ${ users[0].address.address }
+  - Edit: users[0].address.unit
+    button: |
+      users[0].address.unit:
+      ${ users[0].address.unit }
+  - Edit: users[0].address.city
+    button: |
+      users[0].address.city:
+      ${ users[0].address.city }
+  - Edit: users[0].address.state
+    button: |
+      users[0].address.state:
+      ${ users[0].address.state }
+  - Edit: users[0].address.zip
+    button: |
+      users[0].address.zip:
+      ${ users[0].address.zip }
+  - Edit: users[0].phone_number
+    button: |
+      users[0].phone_number:
+      ${ users[0].phone_number }
+  - Edit: interested_parties[0]
+    button: |
+      interested_parties[0]:
+      ${ interested_parties[0] }
+  - Edit: interested_parties[0].address.address
+    button: |
+      interested_parties[0].address.address:
+      ${ interested_parties[0].address.address }
+  - Edit: interested_parties[1]
+    button: |
+      interested_parties[1]:
+      ${ interested_parties[1] }
+  - Edit: interested_parties[1].address.address
+    button: |
+      interested_parties[1].address.address:
+      ${ interested_parties[1].address.address }
+  - Edit: interested_parties[2]
+    button: |
+      interested_parties[2]:
+      ${ interested_parties[2] }
+  - Edit: interested_parties[2].address.address
+    button: |
+      interested_parties[2].address.address:
+      ${ interested_parties[2].address.address }
+  - Edit: interested_parties[3]
+    button: |
+      interested_parties[3]:
+      ${ interested_parties[3] }
+  - Edit: interested_parties[3].address.address
+    button: |
+      interested_parties[3].address.address:
+      ${ interested_parties[3].address.address }
+  - Edit: interested_parties[4]
+    button: |
+      interested_parties[4]:
+      ${ interested_parties[4] }
+  - Edit: interested_parties[4].address.address
+    button: |
+      interested_parties[4].address.address:
+      ${ interested_parties[4].address.address }
+  - Edit: signature_date
+    button: |
+      signature_date:
+      ${ signature_date }
+  - Edit: petitioners[0].signature
+    button: |
+      petitioners[0].signature:
+      ${ petitioners[0].signature }
+  - Edit: attorney.signature
+    button: |
+      attorney.signature:
+      ${ attorney.signature }
+  - Edit: attorney
+    button: |
+      attorney:
+      ${ attorney }
+  - Edit: attorney.address.address
+    button: |
+      attorney.address.address:
+      ${ attorney.address.address }
+  - Edit: attorney.address.unit
+    button: |
+      attorney.address.unit:
+      ${ attorney.address.unit }
+  - Edit: attorney.address.city
+    button: |
+      attorney.address.city:
+      ${ attorney.address.city }
+  - Edit: attorney.address.state
+    button: |
+      attorney.address.state:
+      ${ attorney.address.state }
+  - Edit: attorney.address.zip
+    button: |
+      attorney.address.zip:
+      ${ attorney.address.zip }
+  - Edit: attorney.phone_number
+    button: |
+      attorney.phone_number:
+      ${ attorney.phone_number }
+  - Edit: attorney.email
+    button: |
+      attorney.email:
+      ${ attorney.email }
