@@ -160,9 +160,31 @@ fields:
   - Zip: users[0].address.zip
     required: False
 #  HERE, ASK IF THIS IS SAME AS MAILING, IF NOT, SHOW MAILING ADDRESS ENTRY FIELDS
-#  - Mailing address is same:
-  
-  
+  - Is mailing address the same?: address_same_as_mailing
+    datatype: yesnoradio
+  - Mailing Street Address: petitioner_address_street_mailing
+    show if:
+      variable: address_same_as_mailing
+      is: False
+  - Mailing Unit: petitioner_address_street2_mailing
+    show if:
+      variable: address_same_as_mailing
+      is: False
+    required: False 
+  - Mailing City: petitioner_address_city_mailing
+    show if:
+      variable: address_same_as_mailing
+      is: False
+  - Mailing State: petitioner_address_state_mailing
+    show if:
+      variable: address_same_as_mailing
+      is: False
+  - Mailing Zip: petitioner_address_zip_mailing
+    show if:
+      variable: address_same_as_mailing
+      is: False
+    required: False 
+ 
 #  - Mailing street address: x[i].name.first
 #    show if:
 #      variable: x[i].person_type
@@ -302,29 +324,7 @@ fields:
   - "Date of ${ decedent.name.first }'s death": decedent_death_date
     datatype: date
 ---
-id: Do you have a separate mailing address?
-question: |
-  Do you have a separate mailing address?
-subquestion: |
-  Placeholder text
-fields:
-  - no label: separate_mailing_address
-    datatype: yesnoradio
-  - 'Street': users[0].mailing_addresses.address
-    show if: separate_mailing_address
-  - 'Unit': users[0].mailing_addresses.unit
-    required: False
-    show if: separate_mailing_address
-  - 'City/Town': users[0].mailing_addresses.city
-    show if: separate_mailing_address
-  - 'State': users[0].mailing_addresses.state
-    show if: separate_mailing_address
-    code: |
-      states_list()
-    default: "MA"   
-  - 'ZIP': users[0].mailing_addresses.zip
-    show if: separate_mailing_address
----
+
 id: What is your relationship to the decedent?
 question: |
   What is your relationship to ${ decedent.name.first }?
@@ -478,11 +478,11 @@ attachment:
       - "attorney_email": ${ attorney.email }
       - "decedent_death_date": ${ decedent_death_date }
       - "petitioner_name_middle_initial": ${ user.middle_initial() }
-      - "petitioner_address_street2_mailing": ${ user_address_street2_mailing }
-      - "petitioner_address_street_mailing": ${ user_address_street_mailing }
-      - "petitioner_address_city_mailing": ${ user_address_city_mailing }
-      - "petitioner_address_state_mailing": ${ user_address_state_mailing }
-      - "petitioner_address_zip_mailing": ${ user_address_zip_mailing }
+      - "petitioner_address_street2_mailing": ${ petitioner_address_street2_mailing }
+      - "petitioner_address_street_mailing": ${ petitioner_address_street_mailing }
+      - "petitioner_address_city_mailing": ${ petitioner_address_city_mailing }
+      - "petitioner_address_state_mailing": ${ petitioner_address_state_mailing }
+      - "petitioner_address_zip_mailing": ${ petitioner_address_zip_mailing }
       - "petitioner_relationship": ${ user_relationship }
       - "decedent_has_will_no": ${ decedent_has_will_no }
       - "decedent_has_will_yes": ${ decedent_has_will_yes }
