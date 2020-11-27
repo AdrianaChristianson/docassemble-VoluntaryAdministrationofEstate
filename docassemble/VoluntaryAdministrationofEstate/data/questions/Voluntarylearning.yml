@@ -39,10 +39,16 @@ features:
 sections:
   - review_Voluntary_Administration_of_Estate: Review your answers
 ---
+modules:
+ - docassemble.base.util
+ - docassemble.income.income
+---
 objects:
   - decedent: Individual
   - interested_parties: PeopleList
   - attorney: Individual
+  - assets: IncomeList.using(there_is_another=False,complete_attribute='type')
+
 ---
 #pulled in and edited from BQ
 id: "decedent's address"
@@ -98,7 +104,7 @@ fields:
     show if:
       variable: x[i].person_type      
       is: "individual"
-      required: False
+    required: False
   - City: x[i].address.city
     show if:
       variable: x[i].person_type      
@@ -111,7 +117,7 @@ fields:
     show if:
       variable: x[i].person_type      
       is: "individual"
-      required: False
+    required: False
   - note: "What is this party's interest? You may select more than one choice."
     show if:
       variable: x[i].person_type      
@@ -184,11 +190,6 @@ fields:
       variable: address_same_as_mailing
       is: False
     required: False 
- 
-#  - Mailing street address: x[i].name.first
-#    show if:
-#      variable: x[i].person_type
-#      is: false
 ---
 id: your contact information
 question: |
@@ -284,7 +285,7 @@ code: |
   decedent.address.address
   petitioner_relationship
   decedent_has_will_no
-  asset_car
+  had_vehicle
   interested_parties[0].address.block()
   courts[0].address.county
   str(users[0])
@@ -304,7 +305,7 @@ continue button field: Voluntary_Administration_of_Estate_intro
 question: |
   Voluntary Administration of Estate
 subquestion: |
-  This form allows a user to go through a simplified probate procedure for an estate with minimal assets and no real estate. It may be used by a petitioner in the event that a decedent passes away leaving personal property (no real property) valued at $25,000 or less not counting one motor vehicle.  Once the form is completed, it will be submitted the Probate Court representing the county in which the decedent resided at the time of death.
+  This form allows you go through a simplified probate procedure for an estate with minimal assets and no real estate. It may be used by a petitioner or an attorney in the event that a decedent passes away leaving personal property (no real property) valued at $25,000 or less not counting one motor vehicle.  Once the form is completed, it must be submitted the Probate Court representing the county in which the decedent resided at the time of death.
 ---
 id: Placeholder preview screen
 continue button field: Voluntary_Administration_of_Estate_preview_question
@@ -338,10 +339,15 @@ question: |
   Did ${ decedent.name.first } have a will?
 subquestion: |
   Select "Yes" if the original will and codicil(s) are in the possession of the court or accompany this statement, and you are unaware of any instrument revoking the will and believe it to be ${ decedent.name.first }'s last will. Select "No" if you are unaware of any unrevoked will relating to property in Massachusetts.  
-fields:
-  - : decedent_has_will_no
-    datatype: yesnoradio
- 
+buttons:
+  - Yes, last and unrevoked will is attached:
+      code: |
+        decedent_has_will_yes = True
+        decedent_has_will_no = False
+  - I am unaware of any unrevoked will:
+      code: |
+        decedent_has_will_no = True
+        decedent_has_will_yes = False
 ---
 id: Have you sent a copy of this form to the Division of Medical Assistance
 question: |
@@ -350,37 +356,29 @@ subquestion: |
   NOTE: How does someone fill this out during form completion?
 yesno: certified_mail_copy_sent
 ---
-id: Please list the decedents assets and the total value of all assets.
+id: Decedent vehicle
 question: |
-  Please list the decedent's assets and the total value of all assets.
-subquestion: |
-  Asset total must not exclude $25,000, and one motor vehicle may be excluded from this total.  
+  ${ decedent.name.first }'s Vehicle
 fields:
-  - 'Motor vehicle make, model, and VIN': asset_car
-    required: False
-  - 'Asset 1 description': asset_1
-  - 'Asset 1 value': asset_1_value
-  - 'Asset 2 description': asset_2
-    required: False
-  - 'Asset 2 value': asset_2_value
-    required: False
-  - 'Asset 3 description': asset_3
-    required: False
-  - 'Asset 3 value': asset_3_value
-    required: False
-  - 'Asset 4 description': asset_4
-    required: False
-  - 'Asset 4 value': asset_4_value
-    required: False
-  - 'Asset total value': asset_value_total
+  - Did ${ decedent.name.first } own a vehicle?: had_vehicle
+    datatype: yesnoradio
+  - Motor vehicle make, model, and VIN: asset_car
+    show if: 
+      variable: had_vehicle
+      is: True
 ---
-id: What is the BBO number?
+id: Decedent assets
+#generic object: ValueList
 question: |
-  What is ${ attorney.name.first }'s BBO number?
+  Please list all ${x.object_name()} below (accounts and things decedent owned)
 subquestion: |
-  Placeholder text
+  Click "${word("Add another")}" to add more.
+list collect: True
 fields:
-  - 'Attorney BBO number': attorney_bbo_number
+  - Did ${ decedent.name.first } own any ${noun_singular(x.object_name())}?: x[i].there_are_any
+    datatype: yesnoradio
+  - Asset Description: x[i].description
+  - Asset Value: x[i].value 
 ---
 progress: 100
 mandatory: True
@@ -488,14 +486,14 @@ attachment:
       - "decedent_has_will_yes": ${ decedent_has_will_yes }
       - "certified_mail_copy_sent": ${ certified_mail_copy_sent }
       - "asset_car": ${ asset_car }
-      - "asset_1": ${ asset_1 }
-      - "asset_1_value": ${ asset_1_value }
-      - "asset_2": ${ asset_2 }
-      - "asset_2_value": ${ asset_2_value }
-      - "asset_3": ${ asset_3 }
-      - "asset_3_value": ${ asset_3_value }
-      - "asset_4": ${ asset_4 }
-      - "asset_4_value": ${ asset_4_value }
+      - "asset_1": ${ assets[0].description }
+      - "asset_1_value": ${ assets[0].value }
+      - "asset_2": ${ assets[1].description }
+      - "asset_2_value": ${ assets[1].value }
+      - "asset_3": ${ assets[2].description }
+      - "asset_3_value": ${ assets[2].value }
+      - "asset_4": ${ assets[3].description }
+      - "asset_4_value": ${ assets[3].value }
       - "asset_value_total": ${ asset_value_total }
       - "attorney_bbo_number": ${ attorney_bbo_number }
 ---
