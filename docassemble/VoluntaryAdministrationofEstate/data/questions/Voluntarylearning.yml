@@ -32,6 +32,7 @@ code: |
 ---
 include:
   - docassemble.MAVirtualCourt:basic-questions.yml
+  - docassemble.income:financial_statement.yml
 ---
 features:
   navigation: True
@@ -40,15 +41,50 @@ sections:
   - review_Voluntary_Administration_of_Estate: Review your answers
 ---
 modules:
- - docassemble.base.util
  - docassemble.income.income
 ---
 objects:
   - decedent: Individual
   - interested_parties: PeopleList
   - attorney: Individual
-  - assets: IncomeList.using(there_is_another=False,complete_attribute='type')
+---
+id: interview_order_Voluntary_Administration_of_Estate
+code: |
+  # This is a placeholder to control logic flow in this interview
 
+  assets.add_assets
+  vehicles.gather()
+  if assets.there_are_any:
+    review_assets
+  if vehicles.there_are_any:
+    review_vehicles
+  basic_questions_intro_screen 
+  Voluntary_Administration_of_Estate_intro
+  # Set the allowed courts for this interview
+  allowed_courts = interview_metadata["Voluntary_Administration_of_Estate"]["allowed courts"]
+  nav.set_section('review_Voluntary_Administration_of_Estate')
+  if is_representing_petitioner:
+    attorney.name.first
+    attorney.address.address
+  users[0].name.first
+  users[0].address.address
+  decedent.name.first
+  user_role = 'plaintiff'
+  decedent_death_date
+  decedent.address.address
+  user_relationship
+  decedent_has_will_no
+  interested_parties[0].address.block()
+  courts[0].address.county
+  str(users[0])
+  str(interested_parties[0])
+  certified_mail_copy_sent
+  signature_date
+  Voluntary_Administration_of_Estate_preview_question # Pre-canned preview screen
+  basic_questions_signature_flow
+  users[0].signature
+  attorney.signature
+  Voluntary_Administration_of_Estate = True
 ---
 #pulled in and edited from BQ
 id: "decedent's address"
@@ -194,7 +230,6 @@ fields:
 id: your contact information
 question: |
   What is your primary phone number?
-
 fields:  
   - Phone number: users[0].phone_number
     required: true 
@@ -264,39 +299,89 @@ fields:
     required: False
   - Primary Phone Number: attorney.phone_number
     required: False
----
-id: interview_order_Voluntary_Administration_of_Estate
-code: |
-  # This is a placeholder to control logic flow in this interview
 
-  basic_questions_intro_screen 
-  Voluntary_Administration_of_Estate_intro
-  # Set the allowed courts for this interview
-  allowed_courts = interview_metadata["Voluntary_Administration_of_Estate"]["allowed courts"]
-  nav.set_section('review_Voluntary_Administration_of_Estate')
-  if is_representing_petitioner:
-    attorney.name.first
-    attorney.address.address
-  users[0].name.first
-  users[0].address.address
-  decedent.name.first
-  user_role = 'plaintiff'
-  decedent_death_date
-  decedent.address.address
-  petitioner_relationship
-  decedent_has_will_no
-  had_vehicle
-  interested_parties[0].address.block()
-  courts[0].address.county
-  str(users[0])
-  str(interested_parties[0])
-  certified_mail_copy_sent
-  signature_date
-  Voluntary_Administration_of_Estate_preview_question # Pre-canned preview screen
-  basic_questions_signature_flow
-  users[0].signature
-  attorney.signature
-  Voluntary_Administration_of_Estate = True
+---
+
+#pulled in and edited from Financial Statement
+
+table: vehicles.table
+rows: vehicles
+columns:
+  - Make/Model/Vin: |
+      row_item.make + ' ' + row_item.model + ' ' + row_item.vin
+  - Present value: |
+      currency(row_item.value)
+edit:
+  - value
+---
+#pulled in and edited from Financial Statement
+
+table: assets.table
+rows: assets
+columns:
+  - Type: |
+      asset_type_list()[row_item.type]
+  - Description: |
+      row_item.description
+  - Current balance: |
+      currency(row_item.balance)
+edit:
+  - balance
+---
+#pulled in and edited from Financial Statement
+id: |
+  What assets and vehicles?
+question: |
+  Assets
+subquestion: |
+  Did ${ decedent.name.first } own any of the following?
+fields:
+  - Cars, motorcycles, or other vehicles: vehicles.there_are_any
+    help: |
+      Answer yes if ${ decedent.name.first } owned a car, motorcyle, or any other vehicle
+    datatype: yesno
+  - Other assets: assets.asset_types
+    datatype: checkboxes
+    code: |
+      asset_type_list()
+    exclude: |
+      ['real estate','vehicle']      
+---
+#pulled in and edited from Financial Statement
+id: |
+  assets description
+question: |
+  Describe the ${ordinal(i) } asset.
+fields:
+  - What type of asset is it?: assets[i].type
+    code: |
+      asset_type_list()
+    exclude: |
+      ['real estate','vehicle']      
+  - Describe this account: assets[i].description
+    #help - include info that can describe this account
+  - Explain what type of asset this is: assets[i].other_type
+    show if:
+      variable: assets[i].type
+      is: 'other'     
+  - Current Value : assets[i].balance
+    datatype: currency
+---
+#pulled in and edited from Financial Statement
+
+id: |
+  vehicles
+question: |
+  Describe the vehicle.
+fields:
+  - Make: vehicles[i].make
+    hint: e.g, Ford, Honda 
+  - Model: vehicles[i].model
+    hint: e.g., Fusion, Civic
+  - VIN: vehicles[i].vin
+    hint: VIN is the Vehicle Identification Number
+---
+
 ---
 comment: |
   This question is used to introduce your interview. Please customize
@@ -306,6 +391,13 @@ question: |
   Voluntary Administration of Estate
 subquestion: |
   This form allows you go through a simplified probate procedure for an estate with minimal assets and no real estate. It may be used by a petitioner or an attorney in the event that a decedent passes away leaving personal property (no real property) valued at $25,000 or less not counting one motor vehicle.  Once the form is completed, it must be submitted the Probate Court representing the county in which the decedent resided at the time of death.
+fields: 
+  - Does the estate you are interested in include real estate?: real_estate
+    datatype: yesnoradio
+  - Does the total value of the estate, excluding one vehicle, exceed $25,000?: under_25
+    datatype: yesnoradio
+  - Has it been more than 30 days since the death of the estate owner?: over_30
+    datatype: yesnoradio
 ---
 id: Placeholder preview screen
 continue button field: Voluntary_Administration_of_Estate_preview_question
@@ -318,21 +410,30 @@ subquestion: |
 ---
 id: "What is the decedent's date of death?"
 question: |
-  When did ${ decedent.name.first } die?
+  What was the date of ${ decedent.name.first }'s death?
 subquestion: |
   This information is available on the death certificate.
 fields:
   - "Date of ${ decedent.name.first }'s death": decedent_death_date
     datatype: date
 ---
-
 id: What is your relationship to the decedent?
 question: |
   What is your relationship to ${ decedent.name.first }?
 subquestion: |
   Are you a Personal Representative named in will, surviving spouse, heir, devisee, etc.
 fields:
-  - 'Relationship': petitioner_relationship
+  - 'Relationship': user_relationship
+    choices:
+      - Surviving Spouse
+      - Heir
+      - Divisee
+      - Personal Representative named in will
+      - Other
+  - Other: user_relationship 
+    show if:
+      variable: user_relationship
+      is: Other
 ---
 id: Does the decedent have a will?
 question: |
@@ -355,30 +456,6 @@ question: |
 subquestion: |
   NOTE: How does someone fill this out during form completion?
 yesno: certified_mail_copy_sent
----
-id: Decedent vehicle
-question: |
-  ${ decedent.name.first }'s Vehicle
-fields:
-  - Did ${ decedent.name.first } own a vehicle?: had_vehicle
-    datatype: yesnoradio
-  - Motor vehicle make, model, and VIN: asset_car
-    show if: 
-      variable: had_vehicle
-      is: True
----
-id: Decedent assets
-#generic object: ValueList
-question: |
-  Please list all ${x.object_name()} below (accounts and things decedent owned)
-subquestion: |
-  Click "${word("Add another")}" to add more.
-list collect: True
-fields:
-  - Did ${ decedent.name.first } own any ${noun_singular(x.object_name())}?: x[i].there_are_any
-    datatype: yesnoradio
-  - Asset Description: x[i].description
-  - Asset Value: x[i].value 
 ---
 progress: 100
 mandatory: True
@@ -485,16 +562,19 @@ attachment:
       - "decedent_has_will_no": ${ decedent_has_will_no }
       - "decedent_has_will_yes": ${ decedent_has_will_yes }
       - "certified_mail_copy_sent": ${ certified_mail_copy_sent }
-      - "asset_car": ${ asset_car }
+      - "asset_car": |
+          ${ vehicles.item(0).make }
+          ${ vehicles.item(0).model }
+          ${ vehicles.item(0).vin }
       - "asset_1": ${ assets[0].description }
-      - "asset_1_value": ${ assets[0].value }
+      - "asset_1_value": ${ assets[0].balance }
       - "asset_2": ${ assets[1].description }
-      - "asset_2_value": ${ assets[1].value }
+      - "asset_2_value": ${ assets[1].balance }
       - "asset_3": ${ assets[2].description }
-      - "asset_3_value": ${ assets[2].value }
+      - "asset_3_value": ${ assets[2].balance }
       - "asset_4": ${ assets[3].description }
-      - "asset_4_value": ${ assets[3].value }
-      - "asset_value_total": ${ asset_value_total }
+      - "asset_4_value": ${ assets[3].balance }
+      - "asset_value_total": ${ assets.balance_total() }
       - "attorney_bbo_number": ${ attorney_bbo_number }
 ---
 id: Voluntary_Administration_of_Estate review screen
@@ -528,10 +608,10 @@ review:
     button: |
       Petitioner address zip mailing:
       ${ petitioner_address_zip_mailing }
-  - Edit: petitioner_relationship
+  - Edit: user_relationship
     button: |
       Petitioner relationship:
-      ${ petitioner_relationship }
+      ${ user_relationship }
   - Edit: decedent_has_will_no
     button: |
       Decedent has will:
