@@ -47,17 +47,12 @@ objects:
   - decedent: Individual
   - interested_parties: PeopleList
   - attorney: Individual
+  - vehicles: VehicleList.using(there_is_another=False,complete_attribute='make')
 ---
 id: interview_order_Voluntary_Administration_of_Estate
 code: |
   # This is a placeholder to control logic flow in this interview
 
-  assets.add_assets
-  vehicles.gather()
-  if assets.there_are_any:
-    review_assets
-  if vehicles.there_are_any:
-    review_vehicles
   basic_questions_intro_screen 
   Voluntary_Administration_of_Estate_intro
   # Set the allowed courts for this interview
@@ -74,6 +69,11 @@ code: |
   decedent.address.address
   user_relationship
   decedent_has_will_no
+  assets.add_assets
+  if assets.there_are_any:
+    review_assets
+  if vehicles.there_are_any:
+    review_vehicles
   interested_parties[0].address.block()
   courts[0].address.county
   str(users[0])
@@ -133,6 +133,7 @@ fields:
       is: "individual"
     required: False
   - Address: x[i].address.address
+    address autocomplete: True
     show if:
       variable: x[i].person_type      
       is: "individual"
@@ -205,6 +206,7 @@ fields:
   - Is mailing address the same?: address_same_as_mailing
     datatype: yesnoradio
   - Mailing Street Address: petitioner_address_street_mailing
+    address autocomplete: True
     show if:
       variable: address_same_as_mailing
       is: False
@@ -296,7 +298,6 @@ fields:
   - Zip: attorney.address.zip
     required: False
   - Email Address: attorney.email  
-    required: False
   - Primary Phone Number: attorney.phone_number
     required: False
 
@@ -309,10 +310,8 @@ rows: vehicles
 columns:
   - Make/Model/Vin: |
       row_item.make + ' ' + row_item.model + ' ' + row_item.vin
-  - Present value: |
-      currency(row_item.value)
 edit:
-  - value
+  - make
 ---
 #pulled in and edited from Financial Statement
 
@@ -368,9 +367,8 @@ fields:
     datatype: currency
 ---
 #pulled in and edited from Financial Statement
-
 id: |
-  vehicles
+  vehicles description
 question: |
   Describe the vehicle.
 fields:
@@ -381,8 +379,6 @@ fields:
   - VIN: vehicles[i].vin
     hint: VIN is the Vehicle Identification Number
 ---
-
----
 comment: |
   This question is used to introduce your interview. Please customize
 id: Voluntary Administration of Estate
@@ -390,13 +386,13 @@ continue button field: Voluntary_Administration_of_Estate_intro
 question: |
   Voluntary Administration of Estate
 subquestion: |
-  This form allows you go through a simplified probate procedure for an estate with minimal assets and no real estate. It may be used by a petitioner or an attorney in the event that a decedent passes away leaving personal property (no real property) valued at $25,000 or less not counting one motor vehicle.  Once the form is completed, it must be submitted the Probate Court representing the county in which the decedent resided at the time of death.
+  This interview will complete a form that allows a simplified probate procedure for an estate with no real estate and assets valued at $25,000 or less, not counting one motor vehicle.  Once the form is completed, it must be submitted the Probate Court representing the county in which the decedent resided at the time of death.
 fields: 
   - Does the estate you are interested in include real estate?: real_estate
     datatype: yesnoradio
-  - Does the total value of the estate, excluding one vehicle, exceed $25,000?: under_25
+  - Does the total value of the estate, excluding one vehicle, exceed $25,000?: over_25
     datatype: yesnoradio
-  - Has it been more than 30 days since the death of the estate owner?: over_30
+  - Has it been less than 30 days since the death of the estate owner?: under_30
     datatype: yesnoradio
 ---
 id: Placeholder preview screen
@@ -430,7 +426,7 @@ fields:
       - Divisee
       - Personal Representative named in will
       - Other
-  - Other: user_relationship 
+  - Describe Other Relationship: user_relationship 
     show if:
       variable: user_relationship
       is: Other
@@ -441,11 +437,11 @@ question: |
 subquestion: |
   Select "Yes" if the original will and codicil(s) are in the possession of the court or accompany this statement, and you are unaware of any instrument revoking the will and believe it to be ${ decedent.name.first }'s last will. Select "No" if you are unaware of any unrevoked will relating to property in Massachusetts.  
 buttons:
-  - Yes, last and unrevoked will is attached:
+  - Yes:
       code: |
         decedent_has_will_yes = True
         decedent_has_will_no = False
-  - I am unaware of any unrevoked will:
+  - No:
       code: |
         decedent_has_will_no = True
         decedent_has_will_yes = False
