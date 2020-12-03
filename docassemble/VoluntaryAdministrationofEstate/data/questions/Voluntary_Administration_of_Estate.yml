@@ -73,7 +73,7 @@ code: |
   if assets.there_are_any:
     review_assets
   if vehicles.there_are_any:
-    review_vehicles
+    review_vehicles  
   interested_parties[0].address.block()
   courts[0].address.county
   str(users[0])
@@ -82,14 +82,29 @@ code: |
   signature_date
   Voluntary_Administration_of_Estate_preview_question # Pre-canned preview screen
   basic_questions_signature_flow
-  users[0].signature
-  attorney.signature
   Voluntary_Administration_of_Estate = True
+---
+#pulled in and edited from BQ
+id: name of person
+generic object: Individual
+question: |
+  What is ${x.object_possessive('name')}?
+subquestion: |
+  The decedent is the person who has died, whose estate you are answering questions about here.
+fields:
+  - First Name: x.name.first
+  - Middle Name: x.name.middle
+    required: False
+  - Last Name: x.name.last
+  - Suffix: x.name.suffix
+    code: |
+      name_suffix()
+    required: False
 ---
 #pulled in and edited from BQ
 id: "decedent's address"
 question: |
-  What was ${ decedent }'s last address?
+  What was ${ decedent.name.first }'s last address?
 fields:
   - Street address: decedent.address.address
     address autocomplete: True
@@ -117,6 +132,7 @@ fields:
     choices:
       - Business or organization: business
       - Person: individual
+    required: False
   - First name: x[i].name.first
     show if:
       variable: x[i].person_type
@@ -186,7 +202,7 @@ fields:
 id: petitioner address
 question: |
  % if is_representing_petitioner:
-  What is your client's address?
+  What is ${ users[0].name.first }'s address?
   % else:
   What is your address?
   % endif
@@ -379,6 +395,17 @@ fields:
   - VIN: vehicles[i].vin
     hint: VIN is the Vehicle Identification Number
 ---
+id: |
+  assets review table
+question: |
+  ${ decedent.name.first }'s Assets
+subquestion: |
+  So far you've told us about ${assets.number()} asset(s).
+  You can add more or click continue to go to the next question.
+  ${ assets.table }
+  ${ assets.add_action() }
+field: review_assets 
+---
 comment: |
   This question is used to introduce your interview. Please customize
 id: Voluntary Administration of Estate
@@ -386,7 +413,7 @@ continue button field: Voluntary_Administration_of_Estate_intro
 question: |
   Voluntary Administration of Estate
 subquestion: |
-  This interview will complete a form that allows a simplified probate procedure for an estate with no real estate and assets valued at $25,000 or less, not counting one motor vehicle.  Once the form is completed, it must be submitted the Probate Court representing the county in which the decedent resided at the time of death.
+  This interview will help you complete the Voluntary Administration of Estate (MCP-170) form, which allows a simplified probate procedure for an estate with no real estate and assets valued at $25,000 or less, not counting one motor vehicle.  Once the form is completed and e-signed, it must be submitted the Probate Court representing the county in which the decedent resided at the time of death.
 fields: 
   - Does the estate you are interested in include real estate?: real_estate
     datatype: yesnoradio
@@ -408,7 +435,7 @@ id: "What is the decedent's date of death?"
 question: |
   What was the date of ${ decedent.name.first }'s death?
 subquestion: |
-  This information is available on the death certificate.
+  This information is available on ${ decedent.name.first }'s death certificate.
 fields:
   - "Date of ${ decedent.name.first }'s death": decedent_death_date
     datatype: date
