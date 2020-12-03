@@ -32,6 +32,7 @@ code: |
 ---
 include:
   - docassemble.MAVirtualCourt:basic-questions.yml
+  - docassemble.income:financial_statement.yml
 ---
 features:
   navigation: True
@@ -39,9 +40,52 @@ features:
 sections:
   - review_Voluntary_Administration_of_Estate: Review your answers
 ---
+modules:
+ - docassemble.income.income
+---
 objects:
   - decedent: Individual
   - interested_parties: PeopleList
+  - attorney: Individual
+  - vehicles: VehicleList.using(there_is_another=False,complete_attribute='make')
+---
+id: interview_order_Voluntary_Administration_of_Estate
+code: |
+  # This is a placeholder to control logic flow in this interview
+
+  basic_questions_intro_screen 
+  Voluntary_Administration_of_Estate_intro
+  # Set the allowed courts for this interview
+  allowed_courts = interview_metadata["Voluntary_Administration_of_Estate"]["allowed courts"]
+  nav.set_section('review_Voluntary_Administration_of_Estate')
+  if is_representing_petitioner:
+    attorney.name.first
+    attorney.address.address
+  users[0].name.first
+  users[0].address.address
+  decedent.name.first
+  user_role = 'plaintiff'
+  decedent_death_date
+  decedent.address.address
+  user_relationship
+  decedent_has_will_no
+  assets.add_assets
+  if assets.there_are_any:
+    review_assets
+  if vehicles.there_are_any:
+    review_vehicles
+  interested_parties[0].address.block()
+  courts[0].address.county
+  str(users[0])
+  str(interested_parties[0])
+  certified_mail_copy_sent
+  signature_date
+  Voluntary_Administration_of_Estate_preview_question # Pre-canned preview screen
+  basic_questions_signature_flow
+  users[0].signature
+  attorney.signature
+  Voluntary_Administration_of_Estate = True
+
 ---
 #pulled in and edited from BQ
 id: "decedent's address"
@@ -90,6 +134,7 @@ fields:
       is: "individual"
     required: False
   - Address: x[i].address.address
+    address autocomplete: True
     show if:
       variable: x[i].person_type      
       is: "individual"
@@ -97,7 +142,7 @@ fields:
     show if:
       variable: x[i].person_type      
       is: "individual"
-      required: False
+    required: False
   - City: x[i].address.city
     show if:
       variable: x[i].person_type      
@@ -110,7 +155,7 @@ fields:
     show if:
       variable: x[i].person_type      
       is: "individual"
-      required: False
+    required: False
   - note: "What is this party's interest? You may select more than one choice."
     show if:
       variable: x[i].person_type      
@@ -138,10 +183,14 @@ fields:
       variable: x[i].person_type
       is: business
 ---
-#pulled in and edited from BQ
-id: your address
+#pulled in and edited from BQ and civil Action Coversheet
+id: petitioner address
 question: |
+ % if is_representing_petitioner:
+  What is your client's address?
+  % else:
   What is your address?
+  % endif
 fields:
   - Street address: users[0].address.address
     address autocomplete: True
@@ -155,63 +204,183 @@ fields:
   - Zip: users[0].address.zip
     required: False
 #  HERE, ASK IF THIS IS SAME AS MAILING, IF NOT, SHOW MAILING ADDRESS ENTRY FIELDS
-#  - Mailing address is same:
-  
-  
-#  - Mailing street address: x[i].name.first
-#    show if:
-#      variable: x[i].person_type
-#      is: false
+  - Is mailing address the same?: address_same_as_mailing
+    datatype: yesnoradio
+  - Mailing Street Address: petitioner_address_street_mailing
+    address autocomplete: True
+    show if:
+      variable: address_same_as_mailing
+      is: False
+  - Mailing Unit: petitioner_address_street2_mailing
+    show if:
+      variable: address_same_as_mailing
+      is: False
+    required: False 
+  - Mailing City: petitioner_address_city_mailing
+    show if:
+      variable: address_same_as_mailing
+      is: False
+  - Mailing State: petitioner_address_state_mailing
+    show if:
+      variable: address_same_as_mailing
+      is: False
+  - Mailing Zip: petitioner_address_zip_mailing
+    show if:
+      variable: address_same_as_mailing
+      is: False
+    required: False 
+
 ---
 id: your contact information
 question: |
   What is your primary phone number?
-
 fields:  
   - Phone number: users[0].phone_number
     required: true 
 ---
-id: interview_order_Voluntary_Administration_of_Estate
-code: |
-  # This is a placeholder to control logic flow in this interview
+#pulled in and edited from Civil Action Coversheet
+id: representation
+question: |
+  Representation
+fields:
+  - Are you an attorney representing a petitioner?: is_representing_petitioner
+    datatype: yesnoradio
+  - 'Attorney BBO Number': attorney_bbo_number
+    show if:
+      variable: is_representing_petitioner
+      is: True
+---
+#pulled in and edited from Civil Action Coversheet
+id: petitioner name
+question:  |
+  % if is_representing_petitioner:
+  What is your client's name?
+  % else:
+  What is your name?
+  % endif
+fields:
+  - First Name: users[0].name.first
+  - Middle Name: users[0].name.middle
+    required: False
+  - Last Name: users[0].name.last
+  - Suffix: users[0].name.suffix
+    code: |
+      name_suffix()
+    required: False  
+---
+#pulled in and edited from Civil Action Coversheet
+id: attorney name
+question: |
+  What is your name?
+fields:
+  - First name: attorney.name.first
+  - Middle name: attorney.name.middle
+    required: False
+  - Last name: attorney.name.last
+  - Suffix: attorney.name.suffix
+    code: |
+      name_suffix()
+    required: False
+---
+#pulled in and edited from Civil Action Coversheet
+id: attorney address
+generic object: Individual
+question: |
+  What is your address?
+fields:
+  - Street address: attorney.address.address
+    address autocomplete: True
+  - Unit: attorney.address.unit
+    required: False
+  - City: attorney.address.city
+  - State: attorney.address.state
+    default: MA   
+    code: |
+      states_list()   
+  - Zip: attorney.address.zip
+    required: False
+  - Email Address: attorney.email  
+  - Primary Phone Number: attorney.phone_number
+    required: False
 
-  basic_questions_intro_screen 
-  Voluntary_Administration_of_Estate_intro
-  # Set the allowed courts for this interview
-  allowed_courts = interview_metadata["Voluntary_Administration_of_Estate"]["allowed courts"]
-  nav.set_section('review_Voluntary_Administration_of_Estate')
-  users[0].name.first
-  users[0].address.address
-  users[0].phone_number
-  decedent.name.first
-  user_role = 'plaintiff'
-  decedent_death_date
-  decedent.address.address
-  petitioner_relationship
-  decedent_has_will_no
-  asset_car
-  interested_parties[0].address.block()
-  interested_party1_heir
-  courts[0].address.county
-  str(users[0])
-  users[0].address.address
-  users[0].address.address
-  str(interested_parties[0])
-  certified_mail_copy_sent
-  signature_date
-  str(attorneys[0])
-  attorney_bbo_number
-  attorneys[0].address.address
-  attorneys[0].address.unit
-  attorneys[0].address.city
-  attorneys[0].address.state
-  attorneys[0].address.zip
-  attorneys[0].email
-  Voluntary_Administration_of_Estate_preview_question # Pre-canned preview screen
-  basic_questions_signature_flow
-  users[0].signature
-  attorneys[0].signature
-  Voluntary_Administration_of_Estate = True
+---
+
+#pulled in and edited from Financial Statement
+
+table: vehicles.table
+rows: vehicles
+columns:
+  - Make/Model/Vin: |
+      row_item.make + ' ' + row_item.model + ' ' + row_item.vin
+edit:
+  - make
+---
+#pulled in and edited from Financial Statement
+
+table: assets.table
+rows: assets
+columns:
+  - Type: |
+      asset_type_list()[row_item.type]
+  - Description: |
+      row_item.description
+  - Current balance: |
+      currency(row_item.balance)
+edit:
+  - balance
+---
+#pulled in and edited from Financial Statement
+id: |
+  What assets and vehicles?
+question: |
+  Assets
+subquestion: |
+  Did ${ decedent.name.first } own any of the following?
+fields:
+  - Cars, motorcycles, or other vehicles: vehicles.there_are_any
+    help: |
+      Answer yes if ${ decedent.name.first } owned a car, motorcyle, or any other vehicle
+    datatype: yesno
+  - Other assets: assets.asset_types
+    datatype: checkboxes
+    code: |
+      asset_type_list()
+    exclude: |
+      ['real estate','vehicle']      
+---
+#pulled in and edited from Financial Statement
+id: |
+  assets description
+question: |
+  Describe the ${ordinal(i) } asset.
+fields:
+  - What type of asset is it?: assets[i].type
+    code: |
+      asset_type_list()
+    exclude: |
+      ['real estate','vehicle']      
+  - Describe this account: assets[i].description
+    #help - include info that can describe this account
+  - Explain what type of asset this is: assets[i].other_type
+    show if:
+      variable: assets[i].type
+      is: 'other'     
+  - Current Value : assets[i].balance
+    datatype: currency
+---
+#pulled in and edited from Financial Statement
+id: |
+  vehicles description
+question: |
+  Describe the vehicle.
+fields:
+  - Make: vehicles[i].make
+    hint: e.g, Ford, Honda 
+  - Model: vehicles[i].model
+    hint: e.g., Fusion, Civic
+  - VIN: vehicles[i].vin
+    hint: VIN is the Vehicle Identification Number
+
 ---
 comment: |
   This question is used to introduce your interview. Please customize
@@ -220,7 +389,15 @@ continue button field: Voluntary_Administration_of_Estate_intro
 question: |
   Voluntary Administration of Estate
 subquestion: |
-  This form allows a user to go through a simplified probate procedure for an estate with minimal assets and no real estate. It may be used by a petitioner in the event that a decedent passes away leaving personal property (no real property) valued at $25,000 or less not counting one motor vehicle.  Once the form is completed, it will be submitted the Probate Court representing the county in which the decedent resided at the time of death.
+  This interview will complete a form that allows a simplified probate procedure for an estate with no real estate and assets valued at $25,000 or less, not counting one motor vehicle.  Once the form is completed, it must be submitted the Probate Court representing the county in which the decedent resided at the time of death.
+fields: 
+  - Does the estate you are interested in include real estate?: real_estate
+    datatype: yesnoradio
+  - Does the total value of the estate, excluding one vehicle, exceed $25,000?: over_25
+    datatype: yesnoradio
+  - Has it been less than 30 days since the death of the estate owner?: under_30
+    datatype: yesnoradio
+
 ---
 id: Placeholder preview screen
 continue button field: Voluntary_Administration_of_Estate_preview_question
@@ -233,35 +410,13 @@ subquestion: |
 ---
 id: "What is the decedent's date of death?"
 question: |
-  When did ${ decedent.name.first } die?
+  What was the date of ${ decedent.name.first }'s death?
+
 subquestion: |
   This information is available on the death certificate.
 fields:
   - "Date of ${ decedent.name.first }'s death": decedent_death_date
     datatype: date
----
-id: Do you have a separate mailing address?
-question: |
-  Do you have a separate mailing address?
-subquestion: |
-  Placeholder text
-fields:
-  - no label: separate_mailing_address
-    datatype: yesnoradio
-  - 'Street': users[0].mailing_addresses.address
-    show if: separate_mailing_address
-  - 'Unit': users[0].mailing_addresses.unit
-    required: False
-    show if: separate_mailing_address
-  - 'City/Town': users[0].mailing_addresses.city
-    show if: separate_mailing_address
-  - 'State': users[0].mailing_addresses.state
-    show if: separate_mailing_address
-    code: |
-      states_list()
-    default: "MA"   
-  - 'ZIP': users[0].mailing_addresses.zip
-    show if: separate_mailing_address
 ---
 id: What is your relationship to the decedent?
 question: |
@@ -269,17 +424,33 @@ question: |
 subquestion: |
   Are you a Personal Representative named in will, surviving spouse, heir, devisee, etc.
 fields:
-  - 'Relationship': petitioner_relationship
+  - 'Relationship': user_relationship
+    choices:
+      - Surviving Spouse
+      - Heir
+      - Divisee
+      - Personal Representative named in will
+      - Other
+  - Describe Other Relationship: user_relationship 
+    show if:
+      variable: user_relationship
+      is: Other
+
 ---
 id: Does the decedent have a will?
 question: |
   Did ${ decedent.name.first } have a will?
 subquestion: |
   Select "Yes" if the original will and codicil(s) are in the possession of the court or accompany this statement, and you are unaware of any instrument revoking the will and believe it to be ${ decedent.name.first }'s last will. Select "No" if you are unaware of any unrevoked will relating to property in Massachusetts.  
-fields:
-  - : decedent_has_will_no
-    datatype: yesnoradio
- 
+buttons:
+  - Yes:
+      code: |
+        decedent_has_will_yes = True
+        decedent_has_will_no = False
+  - No:
+      code: |
+        decedent_has_will_no = True
+        decedent_has_will_yes = False
 ---
 id: Have you sent a copy of this form to the Division of Medical Assistance
 question: |
@@ -287,38 +458,6 @@ question: |
 subquestion: |
   NOTE: How does someone fill this out during form completion?
 yesno: certified_mail_copy_sent
----
-id: Please list the decedent's assets and the total value of all assets.
-question: |
-  Please list the decedent's assets and the total value of all assets.
-subquestion: |
-  Placeholder text
-fields:
-  - 'Motor vehicle make, model, and VIN': asset_car
-    required: False
-  - 'Asset 1 description': asset_1
-  - 'Asset 1 value': asset_1_value
-  - 'Asset 2 description': asset_2
-    required: False
-  - 'Asset 2 value': asset_2_value
-    required: False
-  - 'Asset 3 description': asset_3
-    required: False
-  - 'Asset 3 value': asset_3_value
-    required: False
-  - 'Asset 4 description': asset_4
-    required: False
-  - 'Asset 4 value': asset_4_value
-    required: False
-  - 'Asset total value': asset_value_total
----
-id: What is the BBO number?
-question: |
-  What is ${ attorneys[0].name.first }'s BBO number?
-subquestion: |
-  Placeholder text
-fields:
-  - 'Attorney BBO number': attorney_bbo_number
 ---
 progress: 100
 mandatory: True
@@ -364,11 +503,12 @@ attachment:
       - "decedent_address_zip": ${ decedent.address.zip }
       - "petitioner_name_first": ${ users[0].name.first }
       - "petitioner_name_last": ${ users[0].name.last }
-      - "petitioner_address_street": ${ users[0].mailing_addresses.address }
-      - "petitioner_address_street2": ${ users[0].mailing_addresses.unit }
-      - "petitioner_address_city": ${ users[0].mailing_addresses.city }
-      - "petitioner_address_state": ${ users[0].mailing_addresses.state }
-      - "petitioner_address_zip": ${ users[0].mailing_addresses.zip }
+      - "petitioner_address_street": ${ users[0].address.address }
+      - "petitioner_address_street2": ${ users[0].address.unit }
+      - "petitioner_address_city": ${ users[0].address.city }
+      - "petitioner_address_state": ${ users[0].address.state }
+      - "petitioner_address_zip": ${ users[0].address.zip }
+
       - "petitioner_phone": ${ users[0].phone_number }
       - "decedent_name_first__3": ${ decedent.name.first }
       - "decedent_name_middle__3": ${ decedent.name.middle }
@@ -405,36 +545,39 @@ attachment:
       # If it is a signature, test which file version we're expecting. leave it empty unless it's the final attachment version
       - "petitioner_signature": ${ petitioners[0].signature if i == 'final' else '' }
       # If it is a signature, test which file version we're expecting. leave it empty unless it's the final attachment version
-      - "attorney_signature": ${ attorneys[0].signature if i == 'final' else '' }
-      - "attorney_name": ${ str(attorneys[0]) }
-      - "attorney_address_street": ${ attorneys[0].address.address }
-      - "attorney_address_street2": ${ attorneys[0].address.unit }
-      - "attorney_address_city": ${ attorneys[0].address.city }
-      - "attorney_address_state": ${ attorneys[0].address.state }
-      - "attorney_address_zip": ${ attorneys[0].address.zip }
-      - "attorney_phone": ${ attorneys[0].phone_number }
-      - "attorney_email": ${ attorneys[0].email }
+      - "attorney_signature": ${ attorney.signature if i == 'final' else '' }
+      - "attorney_name": ${ attorney.name }
+      - "attorney_address_street": ${ attorney.address.address }
+      - "attorney_address_street2": ${ attorney.address.unit }
+      - "attorney_address_city": ${ attorney.address.city }
+      - "attorney_address_state": ${ attorney.address.state }
+      - "attorney_address_zip": ${ attorney.address.zip }
+      - "attorney_phone": ${ attorney.phone_number }
+      - "attorney_email": ${ attorney.email }
       - "decedent_death_date": ${ decedent_death_date }
       - "petitioner_name_middle_initial": ${ user.middle_initial() }
-      - "petitioner_address_street2_mailing": ${ user_address_street2_mailing }
-      - "petitioner_address_street_mailing": ${ user_address_street_mailing }
-      - "petitioner_address_city_mailing": ${ user_address_city_mailing }
-      - "petitioner_address_state_mailing": ${ user_address_state_mailing }
-      - "petitioner_address_zip_mailing": ${ user_address_zip_mailing }
+      - "petitioner_address_street2_mailing": ${ petitioner_address_street2_mailing }
+      - "petitioner_address_street_mailing": ${ petitioner_address_street_mailing }
+      - "petitioner_address_city_mailing": ${ petitioner_address_city_mailing }
+      - "petitioner_address_state_mailing": ${ petitioner_address_state_mailing }
+      - "petitioner_address_zip_mailing": ${ petitioner_address_zip_mailing }
       - "petitioner_relationship": ${ user_relationship }
       - "decedent_has_will_no": ${ decedent_has_will_no }
       - "decedent_has_will_yes": ${ decedent_has_will_yes }
       - "certified_mail_copy_sent": ${ certified_mail_copy_sent }
-      - "asset_car": ${ asset_car }
-      - "asset_1": ${ asset_1 }
-      - "asset_1_value": ${ asset_1_value }
-      - "asset_2": ${ asset_2 }
-      - "asset_2_value": ${ asset_2_value }
-      - "asset_3": ${ asset_3 }
-      - "asset_3_value": ${ asset_3_value }
-      - "asset_4": ${ asset_4 }
-      - "asset_4_value": ${ asset_4_value }
-      - "asset_value_total": ${ asset_value_total }
+      - "asset_car": |
+          ${ vehicles.item(0).make }
+          ${ vehicles.item(0).model }
+          ${ vehicles.item(0).vin }
+      - "asset_1": ${ assets[0].description }
+      - "asset_1_value": ${ assets[0].balance }
+      - "asset_2": ${ assets[1].description }
+      - "asset_2_value": ${ assets[1].balance }
+      - "asset_3": ${ assets[2].description }
+      - "asset_3_value": ${ assets[2].balance }
+      - "asset_4": ${ assets[3].description }
+      - "asset_4_value": ${ assets[3].balance }
+      - "asset_value_total": ${ assets.balance_total() }
       - "attorney_bbo_number": ${ attorney_bbo_number }
 ---
 id: Voluntary_Administration_of_Estate review screen
@@ -468,10 +611,10 @@ review:
     button: |
       Petitioner address zip mailing:
       ${ petitioner_address_zip_mailing }
-  - Edit: petitioner_relationship
+  - Edit: user_relationship
     button: |
       Petitioner relationship:
-      ${ petitioner_relationship }
+      ${ user_relationship }
   - Edit: decedent_has_will_no
     button: |
       Decedent has will:
@@ -708,39 +851,39 @@ review:
     button: |
       petitioners[0].signature:
       ${ petitioners[0].signature }
-  - Edit: attorneys[0].signature
+  - Edit: attorney.signature
     button: |
-      attorneys[0].signature:
-      ${ attorneys[0].signature }
-  - Edit: attorneys[0]
+      attorney.signature:
+      ${ attorney.signature }
+  - Edit: attorney
     button: |
-      attorneys[0]:
-      ${ attorneys[0] }
-  - Edit: attorneys[0].address.address
+      attorney:
+      ${ attorney }
+  - Edit: attorney.address.address
     button: |
-      attorneys[0].address.address:
-      ${ attorneys[0].address.address }
-  - Edit: attorneys[0].address.unit
+      attorney.address.address:
+      ${ attorney.address.address }
+  - Edit: attorney.address.unit
     button: |
-      attorneys[0].address.unit:
-      ${ attorneys[0].address.unit }
-  - Edit: attorneys[0].address.city
+      attorney.address.unit:
+      ${ attorney.address.unit }
+  - Edit: attorney.address.city
     button: |
-      attorneys[0].address.city:
-      ${ attorneys[0].address.city }
-  - Edit: attorneys[0].address.state
+      attorney.address.city:
+      ${ attorney.address.city }
+  - Edit: attorney.address.state
     button: |
-      attorneys[0].address.state:
-      ${ attorneys[0].address.state }
-  - Edit: attorneys[0].address.zip
+      attorney.address.state:
+      ${ attorney.address.state }
+  - Edit: attorney.address.zip
     button: |
-      attorneys[0].address.zip:
-      ${ attorneys[0].address.zip }
-  - Edit: attorneys[0].phone_number
+      attorney.address.zip:
+      ${ attorney.address.zip }
+  - Edit: attorney.phone_number
     button: |
-      attorneys[0].phone_number:
-      ${ attorneys[0].phone_number }
-  - Edit: attorneys[0].email
+      attorney.phone_number:
+      ${ attorney.phone_number }
+  - Edit: attorney.email
     button: |
-      attorneys[0].email:
-      ${ attorneys[0].email }
+      attorney.email:
+      ${ attorney.email }
