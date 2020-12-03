@@ -85,6 +85,7 @@ code: |
   users[0].signature
   attorney.signature
   Voluntary_Administration_of_Estate = True
+
 ---
 #pulled in and edited from BQ
 id: "decedent's address"
@@ -228,6 +229,7 @@ fields:
       variable: address_same_as_mailing
       is: False
     required: False 
+
 ---
 id: your contact information
 question: |
@@ -378,6 +380,7 @@ fields:
     hint: e.g., Fusion, Civic
   - VIN: vehicles[i].vin
     hint: VIN is the Vehicle Identification Number
+
 ---
 comment: |
   This question is used to introduce your interview. Please customize
@@ -394,6 +397,7 @@ fields:
     datatype: yesnoradio
   - Has it been less than 30 days since the death of the estate owner?: under_30
     datatype: yesnoradio
+
 ---
 id: Placeholder preview screen
 continue button field: Voluntary_Administration_of_Estate_preview_question
@@ -407,6 +411,7 @@ subquestion: |
 id: "What is the decedent's date of death?"
 question: |
   What was the date of ${ decedent.name.first }'s death?
+
 subquestion: |
   This information is available on the death certificate.
 fields:
@@ -430,6 +435,7 @@ fields:
     show if:
       variable: user_relationship
       is: Other
+
 ---
 id: Does the decedent have a will?
 question: |
@@ -502,6 +508,7 @@ attachment:
       - "petitioner_address_city": ${ users[0].address.city }
       - "petitioner_address_state": ${ users[0].address.state }
       - "petitioner_address_zip": ${ users[0].address.zip }
+
       - "petitioner_phone": ${ users[0].phone_number }
       - "decedent_name_first__3": ${ decedent.name.first }
       - "decedent_name_middle__3": ${ decedent.name.middle }
