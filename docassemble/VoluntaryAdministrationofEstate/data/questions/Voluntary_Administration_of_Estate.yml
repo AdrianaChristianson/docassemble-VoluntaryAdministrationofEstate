@@ -151,7 +151,7 @@ generic object: Individual
 question: |
   What is ${x.object_possessive('name')}?
 subquestion: |
-  The decedent is the person who died, and whose estate you are asking the court to let you manage.
+  The decedent is the person who died, and whose estate you are asking the court to let you manage. The name spelling should match the name on the death certificate.
 fields:
   - First Name: x.name.first
   - Middle Name: x.name.middle
@@ -185,7 +185,7 @@ generic object: PeopleList
 question: |
   Please list all ${x.object_name()} below
 subquestion: |
-  Click "${word("Add another")}" to add more.
+  Interested Parties are persons identified by Massachusetts law who can file a petition and who also must be notified of a court proceeding. The term may include a surviving spouse, children, heirs at law, devisees, creditors, fiduciaries representing interested persons and persons having priority for appointment as personal representative, depending on the circumstances. Click "${word("Add another")}" to add more.
 list collect: True
 fields:
   - Is this ${noun_singular(x.object_name())} a person or business?: x[i].person_type
@@ -242,12 +242,12 @@ fields:
       is: "individual"
     datatype: yesno
     help: Def of heir
-  - Divisee: x[i].divisee
+  - Devisee: x[i].devisee
     show if:
       variable: x[i].person_type      
       is: "individual"
     datatype: yesno
-    help: Def of divisee
+    help: Def of devisee
   - Joint Owner: x[i].jointowner
     show if:
       variable: x[i].person_type      
@@ -414,7 +414,7 @@ id: |
 question: |
   Assets
 subquestion: |
-  Did ${ decedent.name.first } own any of the following?
+  Did ${ decedent.name.first } own any of the following in his/her own name?
 fields:
   - Cars, motorcycles, or other vehicles: vehicles.there_are_any
     help: |
@@ -425,7 +425,7 @@ fields:
     code: |
       asset_type_list()
     exclude: |
-      ['real estate','vehicle']      
+      ['real estate','vehicle','ira','mutual fund','trust','stocks','cd']      
 ---
 #pulled in and edited from Financial Statement
 id: |
@@ -438,12 +438,12 @@ fields:
       asset_type_list()
     exclude: |
       ['real estate','vehicle']      
-  - Describe this account: assets[i].description
-    #help - include info that can describe this account
   - Explain what type of asset this is: assets[i].other_type
     show if:
       variable: assets[i].type
-      is: 'other'     
+      is: 'other' 
+  - Describe this asset: assets[i].description
+    #help - include info that can describe this account
   - Current Value : assets[i].balance
     datatype: currency
 ---
@@ -485,34 +485,46 @@ continue button field: Voluntary_Administration_of_Estate_intro
 question: |
   Voluntary Administration of Estate
 subquestion: |
-  You need to ask the Probate and Family Court to allow you to manage the estate of someone who has died.
+  You need to ask the Probate and Family Court to allow you to manage the {probate estate} of someone who has died.
   You can use the Voluntary Administration of Estate form IF:
   
-    1.	The person died more than 30 days ago.
+    1.	30 or more days have passed since the date of the {decedent}'s death,
 
     2.  The person was a resident of Massachusetts at the time of death,
     
-    3.  The value of the estate, not counting one car, is $25,000 or less, 
+    3.  The value of the {probate estate}, not counting one car, is $25,000 or less, 
     
-    4.	There is no real estate owned by the estate, and
+    4.	There is no {real estate} owned by the probate estate, and
     
     5.	No one else has filed to probate the decedent’s will or appoint a personal representative.
 
   Once the form is completed and e-signed, it must be submitted the Probate Court representing the county in which the decedent resided at the time of death.
+  
+  The authority of a {Voluntary Personal Representative} (VPR) is limited by law and does not result in an official appointment by the court.
+  
 fields: 
-  - Does the estate you are interested in include real estate?: real_estate
+  - Does the probate estate you are interested in include real estate?: real_estate
     datatype: yesnoradio
-  - Does the total value of the estate, excluding one vehicle, exceed $25,000?: over_25
+  - Does the total value of the probate estate, excluding one vehicle, exceed $25,000?: over_25
     datatype: yesnoradio
   - Has it been less than 30 days since the death of the estate owner?: under_30
     datatype: yesnoradio
+terms:
+  probate estate: |
+    All of the real and personal property the decedent owned in his or her name alone on the date of death that is subject to probate.
+  decedent: |
+    The person who died.
+  real estate: |
+    Property consisting of land or buildings.
+  Voluntary Personal Representative: |
+    A person at least 18 years of age who has an interest in the decedent’s estate and who undertakes to administer the decedent’s estate without the formality of a court  appointment.
 ---
 id: Placeholder preview screen
 continue button field: Voluntary_Administration_of_Estate_preview_question
 question: |
   Placeholder preview screen
 subquestion: |
-  Here is a preview of the form you'll sign on the next page. 
+  Here is a preview of the form you'll sign on the next page. Click on the image to view it full size.
   
    ${Voluntary_Administration_of_Estate_attachment['preview']}
 ---
@@ -535,7 +547,7 @@ fields:
     choices:
       - Surviving Spouse
       - Heir
-      - Divisee
+      - Devisee
       - Personal Representative named in will
       - Other
   - I am ${decedent.name.first}'s : user_relationship 
@@ -636,7 +648,7 @@ attachment:
       - "interested_party5_name": ${ str(interested_parties[4]) }
       - "interested_party5_address_block": ${ interested_parties[4].address.block() }
       - "interested_party1_heir": ${ interested_parties[0].heir }
-      - "interested_party1_divisee": ${ interested_parties[0].divisee }
+      - "interested_party1_devisee": ${ interested_parties[0].devisee }
       - "interested_party1_jointowner": ${ interested_parties[0].jointowner }
       - "interested_party2_heir": ${ interested_parties[1].heir }
       - "interested_party2_devisee": ${ interested_parties[1].devisee }
@@ -783,10 +795,10 @@ review:
     button: |
       Interested party1 heir:
       ${ word(yesno(interested_party1_heir)) }
-  - Edit: interested_party1_divisee
+  - Edit: interested_party1_devisee
     button: |
-      Interested party1 divisee:
-      ${ word(yesno(interested_party1_divisee)) }
+      Interested party1 devisee:
+      ${ word(yesno(interested_party1_devisee)) }
   - Edit: interested_party1_jointowner
     button: |
       Interested party1 jointowner:
