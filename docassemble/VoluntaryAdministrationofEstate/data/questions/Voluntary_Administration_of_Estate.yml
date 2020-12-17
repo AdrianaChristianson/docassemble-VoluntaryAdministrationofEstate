@@ -459,6 +459,7 @@ fields:
     hint: e.g., Fusion, Civic
   - VIN: vehicles[i].vin
     hint: VIN is the Vehicle Identification Number
+    required: False
 ---
 id: |
   assets review table
@@ -586,16 +587,16 @@ yesno: certified_mail_copy_sent
 ---
 progress: 100
 mandatory: True
-id: Placeholder download screen
+id: Download screen
 question: |
-  Placeholder download screen
+  Download screen
 subquestion: |
-  Placeholder
+  Based on your answers to the previous questions, your Voluntary Administration of Estate form is completed. Download or email it below. 
   
   ### Next steps
   
-  1. Step 1
-  1. Step 2
+  1. You must submit this form, with a certified copy of the death certificate and an original will if there is one, to the Probate Court in the county ${ decedent.name.first } was living on the date of death.
+  1. You must send a copy of this form, along with copies of the death certificate by certifed mail to the Division of Medical Assistance, Estate Recovery Unit. As of the time of this publication, the address is P. O. Box 15205, Worcester, MA 01615-0205. The Division of Medical Assistance is NOT the court. 
   
   Below is a preview of your form.
   
