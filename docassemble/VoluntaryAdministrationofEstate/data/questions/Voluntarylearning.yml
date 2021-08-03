@@ -389,7 +389,7 @@ continue button field: Voluntary_Administration_of_Estate_intro
 question: |
   Voluntary Administration of Estate
 subquestion: |
-  This interview will complete a form that allows a simplified probate procedure for an estate with no real estate and assets valued at $25,000 or less, not counting one motor vehicle.  Once the form is completed, it must be submitted the Probate Court representing the county in which the decedent resided at the time of death.
+  By answering the questions in this interview, you will complete a simplified probate procedure for an estate with no real estate **or** assets valued more than $25,000. This excludes one motor vehicle. The form presented at the end of the interview must be submitted to the Probate Court from the county in which the decedent resided in at the time of death.
 fields: 
   - Does the estate you are interested in include real estate?: real_estate
     datatype: yesnoradio
@@ -452,9 +452,9 @@ buttons:
         decedent_has_will_no = True
         decedent_has_will_yes = False
 ---
-id: Have you sent a copy of this form to the Division of Medical Assistance
+id: Have you sent a copy of this form to the Division of Medical Assistance?
 question: |
-  Have you sent a copy of this form to the Division of Medical Assistance
+  Have you sent a copy of this form to the Division of Medical Assistance?
 subquestion: |
   NOTE: How does someone fill this out during form completion?
 yesno: certified_mail_copy_sent

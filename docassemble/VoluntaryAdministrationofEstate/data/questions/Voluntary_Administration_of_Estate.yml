@@ -165,7 +165,7 @@ fields:
 #pulled in and edited from BQ
 id: "decedent's address"
 question: |
-  Where was ${ decedent.name.first } living when she/he died?
+  Where was ${ decedent.name.first } living when she or he died?
 fields:
   - Street address: decedent.address.address
     address autocomplete: True
@@ -414,7 +414,7 @@ id: |
 question: |
   Assets
 subquestion: |
-  Did ${ decedent.name.first } own any of the following in his/her own name?
+  Did ${ decedent.name.first } own any of the following in his or her own name?
 fields:
   - Cars, motorcycles, or other vehicles: vehicles.there_are_any
     help: |
@@ -466,7 +466,7 @@ id: |
 question: |
   ${ decedent.name.first }'s Assets:
 subquestion: |
-  So far you've told us about ${assets.number()} asset(s).
+  So far you have told us about ${assets.number()} asset(s).
   You can add more or click continue to go to the next question.
   ${ assets.table }
   ${ assets.add_action() }
@@ -525,7 +525,7 @@ continue button field: Voluntary_Administration_of_Estate_preview_question
 question: |
   Placeholder preview screen
 subquestion: |
-  Here is a preview of the form you'll sign on the next page. Click on the image to view it full size.
+  Here is a preview of the form you will sign on the next page. Click on the image to view it full size.
   
    ${Voluntary_Administration_of_Estate_attachment['preview']}
 ---
@@ -559,15 +559,15 @@ terms:
   Personal Representative: |
     A person at least 18 years of age who has an interest in the decedent’s estate and who undertakes to administer the decedent’s estate without the formality of a court appointment.
   devisee: |
-    Persons, entities, charitable organizations, or trusts designated in a will to receive the decedent’s personal or real property. In the case of a devise to an existing trust or trustees, or to a trustee or trust established by the will, the trust or trustee is the devisee and the beneficiaries are not devisees.
+    Persons, entities, charitable organizations, or trusts designated in a will to receive the decedent’s property. In the case of a devise to an existing trust or trustees, or to a trustee or trust established by the will, the trust or trustee is the devisee and the beneficiaries are not devisees.
   heir: |
-    At the time of the decedent’s death, persons who are entitled to receive the decedent’s property under the intestacy succession laws if there is no will.
+    At the time of the decedent’s death, persons who inherit the decedent’s property under the intestacy succession laws if there is no will. 
 ---
 id: Does the decedent have a will?
 question: |
   Did ${ decedent.name.first } have a will?
 subquestion: |
-  Select "Yes" if the original will and codicil(s) are in the possession of the court or accompany this statement, and you are unaware of any instrument revoking the will and believe it to be ${ decedent.name.first }'s last will. Select "No" if you are unaware of any unrevoked will relating to property in Massachusetts.  
+  Select "Yes" if the original will and codicil(s) are in the possession of the court or accompany this statement, and you are unaware of anything revoking the will and believe it to be ${ decedent.name.first }'s last will. Select "No" if you are unaware of any unrevoked will relating to property in Massachusetts.  
 buttons:
   - Yes:
       code: |
@@ -580,7 +580,7 @@ buttons:
 ---
 id: Have you sent a copy of this form to the Division of Medical Assistance
 question: |
-  Have you sent a copy of this form to the Division of Medical Assistance
+  Have you sent a copy of this form to the Division of Medical Assistance?
 subquestion: |
   NOTE: How does someone fill this out during form completion?
 yesno: certified_mail_copy_sent
